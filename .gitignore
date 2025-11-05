@@ -1,0 +1,17 @@
+explorer
+*.o
+*.out
+*.exe
+
+*.log
+*.tmp
+
+.vscode/
+.idea/
+
+*.pid
+*.tar
+*.img
+
+build/
+dist/

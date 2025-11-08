@@ -22,6 +22,33 @@ void listFiles(const string &path) {
     }
 }
 
+// --------------------------------------------------
+// Directory Management
+// --------------------------------------------------
+
+void makeDirectory(const string &dirName) {
+    try {
+        if (fs::create_directory(dirName))
+            cout << "Directory created: " << dirName << endl;
+        else
+            cout << "Failed to create directory (it may already exist).\n";
+    } catch (fs::filesystem_error &e) {
+        cout << "Error: " << e.what() << endl;
+    }
+}
+
+void removeDirectory(const string &dirName) {
+    try {
+        if (fs::remove(dirName))
+            cout << "Directory removed: " << dirName << endl;
+        else
+            cout << "Failed to remove directory (it may not exist or is not empty).\n";
+    } catch (fs::filesystem_error &e) {
+        cout << "Error: " << e.what() << endl;
+    }
+}
+
+
 void copyFile(const string &source, const string &dest) {
     try {
         fs::copy(source, dest, fs::copy_options::overwrite_existing);
@@ -181,6 +208,9 @@ int main() {
     cout << "Commands:\n";
     cout << "  ls               -> list files\n";
     cout << "  lssize [desc]      -> list files sorted by size (add 'desc' for descending order)\n";
+    cout << "  mkdir <folder>     -> create a new directory\n";
+    cout << "  rmdir <folder>     -> remove an existing directory\n";
+
     cout << "  cd <folder>      -> change directory\n";
     cout << "  cd ..            -> go back\n";
     cout << "  cp <src> <dest>  -> copy file\n";
@@ -206,6 +236,18 @@ int main() {
     if (order == "desc" || order == "DESC") descending = true;
     listFilesSortedBySize(currentPath, descending);
 }
+else if (command == "mkdir") {
+    string folder;
+    cin >> folder;
+    makeDirectory((fs::path(currentPath) / folder).string());
+}
+
+else if (command == "rmdir") {
+    string folder;
+    cin >> folder;
+    removeDirectory((fs::path(currentPath) / folder).string());
+}
+
 
  
         else if (command == "cd") {

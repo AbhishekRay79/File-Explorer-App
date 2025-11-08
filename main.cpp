@@ -1,8 +1,10 @@
 #include <iostream>
+
 #include <filesystem>
 #include <fstream>
 #include <string>
-
+#include <vector>
+#include <algorithm>
 using namespace std;
 namespace fs = filesystem;
 
@@ -124,6 +126,50 @@ void changePermissions(const string &filepath, const string &mode) {
     }
 }
 // --------------------------------------------------
+// File size formatting and  sorting
+// --------------------------------------------------
+string formatSize(uintmax_t size) {
+    const char* units[] = {"B", "KB", "MB", "GB"};
+    int unitIndex = 0;
+    double displaySize = size;
+
+    while (displaySize >= 1024 && unitIndex < 3) {
+        displaySize /= 1024;
+        unitIndex++;
+    }
+
+    char buffer[50];
+    sprintf(buffer, "%.2f %s", displaySize, units[unitIndex]);
+    return string(buffer);
+}
+void listFilesSortedBySize(const string &path, bool descending = false){
+    vector<pair<fs::path, uintmax_t>> files;
+
+    for (const auto &entry : fs::directory_iterator(path)) {
+        if (entry.is_regular_file()) {
+            files.push_back({entry.path(), fs::file_size(entry.path())});
+        } else {
+            files.push_back({entry.path(), 0});
+        }
+    }
+
+    // Sort by file size ascending or descending
+   sort(files.begin(), files.end(),
+    [descending](const auto &a, const auto &b) {
+        return descending ? a.second > b.second : a.second < b.second;
+    });
+    cout << "\nFiles in Directory (Sorted by Size): " << fs::absolute(path) << "\n\n";
+
+    for (auto &item : files) {
+        if (fs::is_directory(item.first))
+            cout << "[DIR]  " << item.first.filename().string() << endl;
+        else
+            cout << "       " << item.first.filename().string()
+                 << " (" << formatSize(item.second) << ")" << endl;
+    }
+}
+
+// --------------------------------------------------
 // Main Program
 // --------------------------------------------------
 
@@ -134,6 +180,7 @@ int main() {
     cout << "File Explorer - Basic Version\n";
     cout << "Commands:\n";
     cout << "  ls               -> list files\n";
+    cout << "  lssize [desc]      -> list files sorted by size (add 'desc' for descending order)\n";
     cout << "  cd <folder>      -> change directory\n";
     cout << "  cd ..            -> go back\n";
     cout << "  cp <src> <dest>  -> copy file\n";
@@ -150,7 +197,17 @@ int main() {
 
         if (command == "ls") {
             listFiles(currentPath);
-        } 
+        }
+	else if (command == "lssize") {
+    string order;
+    getline(cin, order);
+    if (!order.empty() && order[0] == ' ') order.erase(0, order.find_first_not_of(' '));
+    bool descending = false;
+    if (order == "desc" || order == "DESC") descending = true;
+    listFilesSortedBySize(currentPath, descending);
+}
+
+ 
         else if (command == "cd") {
             string folder;
             cin >> folder;
@@ -213,3 +270,4 @@ int main() {
 
     return 0;
 }
+
